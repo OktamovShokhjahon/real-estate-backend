@@ -36,7 +36,8 @@ app.use(express.urlencoded({ extended: true }));
 // Database connection
 mongoose
   .connect(
-    process.env.MONGODB_URI || "mongodb://localhost:27017/real-estate-reviews",
+    process.env.MONGODB_URI ||
+      "mongodb+srv://leetcoder24:FTXR7Hd1x06GW880@cluster0.1iqah.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
     {
       useNewUrlParser: true,
       useUnifiedTopology: true,
