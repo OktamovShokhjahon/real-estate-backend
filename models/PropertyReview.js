@@ -86,6 +86,14 @@ const propertyReviewSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
       },
+      isReported: {
+        type: Boolean,
+        default: false,
+      },
+      reportCount: {
+        type: Number,
+        default: 0,
+      },
     },
   ],
   createdAt: {

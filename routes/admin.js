@@ -643,4 +643,142 @@ router.patch(
   }
 );
 
+// List all comments (pending, approved, reported) for property and tenant reviews
+router.get("/comments", adminAuth, async (req, res) => {
+  try {
+    const propertyComments = await PropertyReview.aggregate([
+      { $unwind: "$comments" },
+      {
+        $addFields: {
+          "comments.reviewId": "$_id",
+          "comments.reviewType": "property",
+        },
+      },
+      { $replaceRoot: { newRoot: "$comments" } },
+    ]);
+    const tenantComments = await TenantReview.aggregate([
+      { $unwind: "$comments" },
+      {
+        $addFields: {
+          "comments.reviewId": "$_id",
+          "comments.reviewType": "tenant",
+        },
+      },
+      { $replaceRoot: { newRoot: "$comments" } },
+    ]);
+    res.json({ propertyComments, tenantComments });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Approve/reject/delete property review comment
+router.patch(
+  "/property-reviews/:reviewId/comments/:commentId/moderate",
+  adminAuth,
+  validationMiddleware.validateObjectId,
+  async (req, res) => {
+    try {
+      const { action } = req.body; // 'approve', 'reject', 'delete'
+      const review = await PropertyReview.findById(req.params.reviewId);
+      if (!review) return res.status(404).json({ message: "Review not found" });
+      const comment = review.comments.id(req.params.commentId);
+      if (!comment)
+        return res.status(404).json({ message: "Comment not found" });
+      if (action === "approve") {
+        comment.isApproved = true;
+        comment.isReported = false;
+        comment.reportCount = 0;
+      } else if (action === "reject" || action === "delete") {
+        comment.remove();
+      }
+      await review.save();
+      res.json({ message: `Comment ${action}d successfully` });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+// Approve/reject/delete tenant review comment
+router.patch(
+  "/tenant-reviews/:reviewId/comments/:commentId/moderate",
+  adminAuth,
+  validationMiddleware.validateObjectId,
+  async (req, res) => {
+    try {
+      const { action } = req.body; // 'approve', 'reject', 'delete'
+      const review = await TenantReview.findById(req.params.reviewId);
+      if (!review) return res.status(404).json({ message: "Review not found" });
+      const comment = review.comments.id(req.params.commentId);
+      if (!comment)
+        return res.status(404).json({ message: "Comment not found" });
+      if (action === "approve") {
+        comment.isApproved = true;
+        comment.isReported = false;
+        comment.reportCount = 0;
+      } else if (action === "reject" || action === "delete") {
+        comment.remove();
+      }
+      await review.save();
+      res.json({ message: `Comment ${action}d successfully` });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+// Report property review comment (user)
+router.post(
+  "/property-reviews/:reviewId/comments/:commentId/report",
+  adminAuth,
+  validationMiddleware.validateObjectId,
+  async (req, res) => {
+    try {
+      const review = await PropertyReview.findById(req.params.reviewId);
+      if (!review) return res.status(404).json({ message: "Review not found" });
+      const comment = review.comments.id(req.params.commentId);
+      if (!comment)
+        return res.status(404).json({ message: "Comment not found" });
+      comment.reportCount += 1;
+      if (comment.reportCount >= 3) {
+        comment.isReported = true;
+      }
+      await review.save();
+      res.json({ message: "Comment reported successfully" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+// Report tenant review comment (user)
+router.post(
+  "/tenant-reviews/:reviewId/comments/:commentId/report",
+  adminAuth,
+  validationMiddleware.validateObjectId,
+  async (req, res) => {
+    try {
+      const review = await TenantReview.findById(req.params.reviewId);
+      if (!review) return res.status(404).json({ message: "Review not found" });
+      const comment = review.comments.id(req.params.commentId);
+      if (!comment)
+        return res.status(404).json({ message: "Comment not found" });
+      comment.reportCount += 1;
+      if (comment.reportCount >= 3) {
+        comment.isReported = true;
+      }
+      await review.save();
+      res.json({ message: "Comment reported successfully" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
 module.exports = router;

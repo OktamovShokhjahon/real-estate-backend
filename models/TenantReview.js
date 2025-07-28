@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 
 const tenantReviewSchema = new mongoose.Schema({
   author: {
@@ -72,6 +72,14 @@ const tenantReviewSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
       },
+      isReported: {
+        type: Boolean,
+        default: false,
+      },
+      reportCount: {
+        type: Number,
+        default: 0,
+      },
     },
   ],
   createdAt: {
@@ -82,9 +90,13 @@ const tenantReviewSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-})
+});
 
-tenantReviewSchema.index({ tenantFullName: 1, tenantIdLastFour: 1, tenantPhoneLastFour: 1 })
-tenantReviewSchema.index({ createdAt: -1 })
+tenantReviewSchema.index({
+  tenantFullName: 1,
+  tenantIdLastFour: 1,
+  tenantPhoneLastFour: 1,
+});
+tenantReviewSchema.index({ createdAt: -1 });
 
-module.exports = mongoose.model("TenantReview", tenantReviewSchema)
+module.exports = mongoose.model("TenantReview", tenantReviewSchema);

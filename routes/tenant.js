@@ -147,4 +147,29 @@ router.post(
   }
 );
 
+// Report tenant review comment
+router.post(
+  "/reviews/:reviewId/comments/:commentId/report",
+  auth,
+  validationMiddleware.validateObjectId,
+  async (req, res) => {
+    try {
+      const review = await TenantReview.findById(req.params.reviewId);
+      if (!review) return res.status(404).json({ message: "Review not found" });
+      const comment = review.comments.id(req.params.commentId);
+      if (!comment)
+        return res.status(404).json({ message: "Comment not found" });
+      comment.reportCount += 1;
+      if (comment.reportCount >= 3) {
+        comment.isReported = true;
+      }
+      await review.save();
+      res.json({ message: "Comment reported successfully" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
 module.exports = router;
