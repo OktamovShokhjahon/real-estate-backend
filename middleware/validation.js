@@ -7,21 +7,21 @@ const validationMiddleware = {
   validateUserRegistration: [
     body("email")
       .isEmail()
-      .withMessage("Please provide a valid email address")
+      .withMessage("Пожалуйста, укажите корректный email адрес")
       .normalizeEmail()
       .custom((value) => {
         if (!validators.isValidEmail(value)) {
-          throw new Error("Email format is invalid");
+          throw new Error("Формат email неверный");
         }
         return true;
       }),
     body("password")
       .isLength({ min: 8 })
-      .withMessage("Password must be at least 8 characters long")
+      .withMessage("Пароль должен содержать минимум 8 символов")
       .custom((value) => {
         if (!validators.isValidPassword(value)) {
           throw new Error(
-            "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+            "Пароль должен содержать минимум одну заглавную букву, одну строчную букву и одну цифру"
           );
         }
         return true;
@@ -29,20 +29,20 @@ const validationMiddleware = {
     body("firstName")
       .trim()
       .isLength({ min: 2, max: 50 })
-      .withMessage("First name must be between 2 and 50 characters")
+      .withMessage("Имя должно содержать от 2 до 50 символов")
       .custom((value) => {
         if (!validators.isValidName(value)) {
-          throw new Error("First name contains invalid characters");
+          throw new Error("Имя содержит недопустимые символы");
         }
         return true;
       }),
     body("lastName")
       .trim()
       .isLength({ min: 2, max: 50 })
-      .withMessage("Last name must be between 2 and 50 characters")
+      .withMessage("Фамилия должна содержать от 2 до 50 символов")
       .custom((value) => {
         if (!validators.isValidName(value)) {
-          throw new Error("Last name contains invalid characters");
+          throw new Error("Фамилия содержит недопустимые символы");
         }
         return true;
       }),
@@ -52,19 +52,19 @@ const validationMiddleware = {
   validateUserLogin: [
     body("email")
       .isEmail()
-      .withMessage("Please provide a valid email address")
+      .withMessage("Пожалуйста, укажите корректный email адрес")
       .normalizeEmail()
       .custom((value) => {
         if (!validators.isValidEmail(value)) {
-          throw new Error("Email format is invalid");
+          throw new Error("Формат email неверный");
         }
         return true;
       }),
     body("password")
       .exists()
-      .withMessage("Password is required")
+      .withMessage("Пароль обязателен")
       .isLength({ min: 1 })
-      .withMessage("Password cannot be empty"),
+      .withMessage("Пароль не может быть пустым"),
   ],
 
   // Property review validation
@@ -72,30 +72,32 @@ const validationMiddleware = {
     body("city")
       .trim()
       .isLength({ min: 2, max: 100 })
-      .withMessage("City must be between 2 and 100 characters")
+      .withMessage("Город должен содержать от 2 до 100 символов")
       .custom((value) => {
         if (!validators.isValidCity(value)) {
-          throw new Error("City name contains invalid characters");
+          throw new Error("Название города содержит недопустимые символы");
         }
         return true;
       }),
     body("street")
       .trim()
       .isLength({ min: 2, max: 200 })
-      .withMessage("Street must be between 2 and 200 characters")
+      .withMessage("Улица должна содержать от 2 до 200 символов")
       .custom((value) => {
         if (!validators.isValidStreet(value)) {
-          throw new Error("Street name contains invalid characters");
+          throw new Error("Название улицы содержит недопустимые символы");
         }
         return true;
       }),
     body("building")
       .trim()
       .isLength({ min: 1, max: 50 })
-      .withMessage("Building must be between 1 and 50 characters")
+      .withMessage("Здание должно содержать от 1 до 50 символов")
       .custom((value) => {
         if (!validators.isValidBuilding(value)) {
-          throw new Error("Building name/number contains invalid characters");
+          throw new Error(
+            "Название/номер здания содержит недопустимые символы"
+          );
         }
         return true;
       }),
@@ -108,7 +110,7 @@ const validationMiddleware = {
           value !== "" &&
           !validators.isValidFloor(value)
         ) {
-          throw new Error("Floor must be a valid number");
+          throw new Error("Этаж должен быть корректным числом");
         }
         return true;
       }),
@@ -116,72 +118,72 @@ const validationMiddleware = {
       .optional()
       .custom((value) => {
         if (value && !validators.isValidApartmentNumber(value)) {
-          throw new Error("Apartment number contains invalid characters");
+          throw new Error("Номер квартиры содержит недопустимые символы");
         }
         return true;
       }),
     body("numberOfRooms")
       .isInt({ min: 1, max: 8 })
-      .withMessage("Number of rooms must be between 1 and 8")
+      .withMessage("Количество комнат должно быть от 1 до 8")
       .custom((value) => {
         if (!validators.isValidNumberOfRooms(value)) {
-          throw new Error("Number of rooms is invalid");
+          throw new Error("Количество комнат неверно");
         }
         return true;
       }),
     body("rentalPeriod.from.month")
       .isInt({ min: 1, max: 12 })
-      .withMessage("From month must be between 1 and 12")
+      .withMessage("Месяц начала должен быть от 1 до 12")
       .custom((value) => {
         if (!validators.isValidMonth(value)) {
-          throw new Error("From month is invalid");
+          throw new Error("Месяц начала неверен");
         }
         return true;
       }),
     body("rentalPeriod.from.year")
       .isInt({ min: 1900 })
-      .withMessage("From year must be 1900 or later")
+      .withMessage("Год начала должен быть 1900 или позже")
       .custom((value) => {
         if (!validators.isValidYear(value)) {
-          throw new Error("From year is invalid");
+          throw new Error("Год начала неверен");
         }
         return true;
       }),
     body("rentalPeriod.to.month")
       .isInt({ min: 1, max: 12 })
-      .withMessage("To month must be between 1 and 12")
+      .withMessage("Месяц окончания должен быть от 1 до 12")
       .custom((value) => {
         if (!validators.isValidMonth(value)) {
-          throw new Error("To month is invalid");
+          throw new Error("Месяц окончания неверен");
         }
         return true;
       }),
     body("rentalPeriod.to.year")
       .isInt({ min: 1900 })
-      .withMessage("To year must be 1900 or later")
+      .withMessage("Год окончания должен быть 1900 или позже")
       .custom((value) => {
         if (!validators.isValidYear(value)) {
-          throw new Error("To year is invalid");
+          throw new Error("Год окончания неверен");
         }
         return true;
       }),
     body("landlordName")
       .trim()
       .isLength({ min: 2, max: 100 })
-      .withMessage("Landlord name must be between 2 and 100 characters")
+      .withMessage("Имя арендодателя должно содержать от 2 до 100 символов")
       .custom((value) => {
         if (!validators.isValidLandlordName(value)) {
-          throw new Error("Landlord name contains invalid characters");
+          throw new Error("Имя арендодателя содержит недопустимые символы");
         }
         return true;
       }),
     body("reviewText")
       .trim()
       .isLength({ min: 10, max: 5000 })
-      .withMessage("Review text must be between 10 and 5000 characters")
+      .withMessage("Текст отзыва должен содержать от 10 до 5000 символов")
       .custom((value) => {
         if (!validators.isValidReviewText(value)) {
-          throw new Error("Review text contains invalid characters");
+          throw new Error("Текст отзыва содержит недопустимые символы");
         }
         return true;
       }),
@@ -194,7 +196,7 @@ const validationMiddleware = {
           value !== "" &&
           !validators.isValidRating(value)
         ) {
-          throw new Error("Rating must be between 1 and 5");
+          throw new Error("Рейтинг должен быть от 1 до 5");
         }
         return true;
       }),
@@ -205,74 +207,78 @@ const validationMiddleware = {
     body("tenantFullName")
       .trim()
       .isLength({ min: 2, max: 100 })
-      .withMessage("Tenant full name must be between 2 and 100 characters")
+      .withMessage(
+        "Полное имя арендатора должно содержать от 2 до 100 символов"
+      )
       .custom((value) => {
         if (!validators.isValidTenantFullName(value)) {
-          throw new Error("Tenant full name contains invalid characters");
+          throw new Error(
+            "Полное имя арендатора содержит недопустимые символы"
+          );
         }
         return true;
       }),
     body("tenantIdLastFour")
       .isLength({ min: 4, max: 4 })
-      .withMessage("Tenant ID last four digits must be exactly 4 characters")
+      .withMessage("Последние 4 цифры паспорта должны быть ровно 4 символа")
       .custom((value) => {
         if (!validators.isValidIdLastFour(value)) {
-          throw new Error("Tenant ID last four digits must be numeric");
+          throw new Error("Последние 4 цифры паспорта должны быть числовыми");
         }
         return true;
       }),
     body("tenantPhoneLastFour")
       .isLength({ min: 4, max: 4 })
-      .withMessage("Tenant phone last four digits must be exactly 4 characters")
+      .withMessage("Последние 4 цифры телефона должны быть ровно 4 символа")
       .custom((value) => {
         if (!validators.isValidPhoneLastFour(value)) {
-          throw new Error("Tenant phone last four digits must be numeric");
+          throw new Error("Последние 4 цифры телефона должны быть числовыми");
         }
         return true;
       }),
     body("rentalPeriod.from.month")
       .isInt({ min: 1, max: 12 })
-      .withMessage("From month must be between 1 and 12")
+      .withMessage("Месяц начала должен быть от 1 до 12")
       .custom((value) => {
         if (!validators.isValidMonth(value)) {
-          throw new Error("From month is invalid");
+          throw new Error("Месяц начала неверен");
         }
         return true;
       }),
     body("rentalPeriod.from.year")
       .isInt({ min: 1900 })
-      .withMessage("From year must be 1900 or later")
+      .withMessage("Год начала должен быть 1900 или позже")
       .custom((value) => {
         if (!validators.isValidYear(value)) {
-          throw new Error("From year is invalid");
+          throw new Error("Год начала неверен");
         }
         return true;
       }),
     body("rentalPeriod.to.month")
       .isInt({ min: 1, max: 12 })
-      .withMessage("To month must be between 1 and 12")
+      .withMessage("Месяц окончания должен быть от 1 до 12")
       .custom((value) => {
         if (!validators.isValidMonth(value)) {
-          throw new Error("To month is invalid");
+          throw new Error("Месяц окончания неверен");
         }
         return true;
       }),
     body("rentalPeriod.to.year")
       .isInt({ min: 1900 })
-      .withMessage("To year must be 1900 or later")
+      .withMessage("Год окончания должен быть 1900 или позже")
       .custom((value) => {
         if (!validators.isValidYear(value)) {
-          throw new Error("To year is invalid");
+          throw new Error("Год окончания неверен");
         }
         return true;
       }),
     body("reviewText")
       .trim()
       .isLength({ min: 10, max: 5000 })
-      .withMessage("Review text must be between 10 and 5000 characters")
+      .withMessage("Текст отзыва должен содержать от 10 до 5000 символов")
       .custom((value) => {
         if (!validators.isValidReviewText(value)) {
-          throw new Error("Review text contains invalid characters");
+          throw new Error("Текст отзыва содержит недопустимые символы");
         }
         return true;
       }),
@@ -285,7 +291,7 @@ const validationMiddleware = {
           value !== "" &&
           !validators.isValidRating(value)
         ) {
-          throw new Error("Rating must be between 1 and 5");
+          throw new Error("Рейтинг должен быть от 1 до 5");
         }
         return true;
       }),
@@ -296,10 +302,10 @@ const validationMiddleware = {
     body("text")
       .trim()
       .isLength({ min: 1, max: 1000 })
-      .withMessage("Comment text must be between 1 and 1000 characters")
+      .withMessage("Текст комментария должен содержать от 1 до 1000 символов")
       .custom((value) => {
         if (!validators.isValidCommentText(value)) {
-          throw new Error("Comment text contains invalid characters");
+          throw new Error("Текст комментария содержит недопустимые символы");
         }
         return true;
       }),
@@ -311,7 +317,9 @@ const validationMiddleware = {
       .optional()
       .custom((value) => {
         if (value && !validators.isValidPageNumber(value)) {
-          throw new Error("Page number must be a positive integer");
+          throw new Error(
+            "Номер страницы должен быть положительным целым числом"
+          );
         }
         return true;
       }),
@@ -319,7 +327,7 @@ const validationMiddleware = {
       .optional()
       .custom((value) => {
         if (value && !validators.isValidPageLimit(value)) {
-          throw new Error("Limit must be between 1 and 50");
+          throw new Error("Лимит должен быть от 1 до 50");
         }
         return true;
       }),
@@ -327,7 +335,9 @@ const validationMiddleware = {
       .optional()
       .custom((value) => {
         if (value && !validators.isValidSearchQuery(value)) {
-          throw new Error("City search query contains invalid characters");
+          throw new Error(
+            "Поисковый запрос города содержит недопустимые символы"
+          );
         }
         return true;
       }),
@@ -335,7 +345,9 @@ const validationMiddleware = {
       .optional()
       .custom((value) => {
         if (value && !validators.isValidSearchQuery(value)) {
-          throw new Error("Street search query contains invalid characters");
+          throw new Error(
+            "Поисковый запрос улицы содержит недопустимые символы"
+          );
         }
         return true;
       }),
@@ -343,7 +355,9 @@ const validationMiddleware = {
       .optional()
       .custom((value) => {
         if (value && !validators.isValidSearchQuery(value)) {
-          throw new Error("Building search query contains invalid characters");
+          throw new Error(
+            "Поисковый запрос здания содержит недопустимые символы"
+          );
         }
         return true;
       }),
@@ -351,7 +365,9 @@ const validationMiddleware = {
       .optional()
       .custom((value) => {
         if (value && !validators.isValidSearchQuery(value)) {
-          throw new Error("Name search query contains invalid characters");
+          throw new Error(
+            "Поисковый запрос имени содержит недопустимые символы"
+          );
         }
         return true;
       }),
@@ -359,7 +375,7 @@ const validationMiddleware = {
       .optional()
       .custom((value) => {
         if (value && !validators.isValidIdLastFour(value)) {
-          throw new Error("ID last four digits must be numeric");
+          throw new Error("Последние 4 цифры ID должны быть числовыми");
         }
         return true;
       }),
@@ -367,7 +383,7 @@ const validationMiddleware = {
       .optional()
       .custom((value) => {
         if (value && !validators.isValidPhoneLastFour(value)) {
-          throw new Error("Phone last four digits must be numeric");
+          throw new Error("Последние 4 цифры телефона должны быть числовыми");
         }
         return true;
       }),
@@ -375,7 +391,7 @@ const validationMiddleware = {
       .optional()
       .custom((value) => {
         if (value && !validators.isValidNumberOfRooms(value)) {
-          throw new Error("Number of rooms must be between 1 and 8");
+          throw new Error("Количество комнат должно быть от 1 до 8");
         }
         return true;
       }),
@@ -385,7 +401,7 @@ const validationMiddleware = {
   validateModerationAction: [
     body("action").custom((value) => {
       if (!validators.isValidModerationAction(value)) {
-        throw new Error("Invalid moderation action");
+        throw new Error("Неверное действие модерации");
       }
       return true;
     }),
@@ -394,14 +410,14 @@ const validationMiddleware = {
   validateUserStatus: [
     body("isActive")
       .isBoolean()
-      .withMessage("isActive must be a boolean value"),
+      .withMessage("isActive должно быть булевым значением"),
   ],
 
   // ObjectId validation
   validateObjectId: [
     param("id").custom((value) => {
       if (!validators.isValidObjectId(value)) {
-        throw new Error("Invalid ID format");
+        throw new Error("Неверный формат ID");
       }
       return true;
     }),
@@ -412,7 +428,7 @@ const validationMiddleware = {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
-        message: "Validation failed",
+        message: "Ошибка валидации",
         errors: errors.array(),
       });
     }
