@@ -123,17 +123,53 @@ router.post(
       if (
         review.author &&
         review.author.email &&
-        review.author._id.toString() !== req.user._id.toString()
+        review.author._id.toString() !== req.user._id.toString() &&
+        review.author.emailNotifications !== false
       ) {
         const postLink = `${
           process.env.FRONTEND_URL || "http://localhost:3000"
         }/property/${review._id}`;
-        await sendEmail({
-          to: review.author.email,
-          subject: "New reply to your property review",
-          text: `Someone replied to your property review. View it here: ${postLink}`,
-          html: `<p>Someone replied to your property review. <a href='${postLink}'>View the reply</a></p>`,
-        });
+
+        // Get commenter's name
+        const commenterName = `${req.user.firstName} ${req.user.lastName}`;
+
+        // Truncate comment text for preview (first 100 characters)
+        const commentPreview =
+          commentText.length > 100
+            ? commentText.substring(0, 100) + "..."
+            : commentText;
+
+        try {
+          console.log(
+            `Sending email notification to ${review.author.email} for comment on property review ${review._id}`
+          );
+          await sendEmail({
+            to: review.author.email,
+            subject: `New comment on your property review from ${commenterName}`,
+            text: `Hi ${review.author.firstName},\n\n${commenterName} commented on your property review:\n\n"${commentPreview}"\n\nView the full comment and reply here: ${postLink}\n\nBest regards,\nProkvartiru.kz Team`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #333;">New Comment on Your Property Review</h2>
+                <p>Hi ${review.author.firstName},</p>
+                <p><strong>${commenterName}</strong> commented on your property review:</p>
+                <div style="background-color: #f5f5f5; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0;">
+                  <p style="margin: 0; font-style: italic;">"${commentPreview}"</p>
+                </div>
+                <p><a href="${postLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Comment & Reply</a></p>
+                <p style="color: #666; font-size: 14px;">Best regards,<br>Prokvartiru.kz Team</p>
+              </div>
+            `,
+          });
+          console.log(
+            `Email notification sent successfully to ${review.author.email}`
+          );
+        } catch (emailError) {
+          console.error(
+            "Failed to send email notification:",
+            emailError.message
+          );
+          // Don't fail the comment creation if email fails
+        }
       }
 
       res.status(201).json(review.comments[review.comments.length - 1]);
