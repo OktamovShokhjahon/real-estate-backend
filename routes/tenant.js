@@ -3,6 +3,8 @@ const TenantReview = require("../models/TenantReview");
 const { auth } = require("../middleware/auth");
 const validationMiddleware = require("../middleware/validation");
 const Filter = require("bad-words");
+const { sendEmail } = require("../utils/email");
+const User = require("../models/User");
 
 const router = express.Router();
 const filter = new Filter();
@@ -97,7 +99,9 @@ router.post(
   validationMiddleware.handleValidationErrors,
   async (req, res) => {
     try {
-      const review = await TenantReview.findById(req.params.id);
+      const review = await TenantReview.findById(req.params.id).populate(
+        "author"
+      );
       if (!review) {
         return res.status(404).json({ message: "Review not found" });
       }
@@ -111,6 +115,23 @@ router.post(
 
       await review.save();
       await review.populate("comments.author", "firstName lastName");
+
+      // Send email notification to the review author if not the commenter
+      if (
+        review.author &&
+        review.author.email &&
+        review.author._id.toString() !== req.user._id.toString()
+      ) {
+        const postLink = `${
+          process.env.FRONTEND_URL || "http://localhost:3000"
+        }/tenant/${review._id}`;
+        await sendEmail({
+          to: review.author.email,
+          subject: "New reply to your tenant review",
+          text: `Someone replied to your tenant review. View it here: ${postLink}`,
+          html: `<p>Someone replied to your tenant review. <a href='${postLink}'>View the reply</a></p>`,
+        });
+      }
 
       res.status(201).json(review.comments[review.comments.length - 1]);
     } catch (error) {
