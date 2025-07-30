@@ -10,79 +10,70 @@ const crypto = require("crypto");
 const router = express.Router();
 
 // Register
-router.post(
-  "/register",
-  validationMiddleware.sanitizeInput,
-  validationMiddleware.validateUserRegistration,
-  validationMiddleware.handleValidationErrors,
-  async (req, res) => {
-    try {
-      const { email, password, firstName, lastName, resend } = req.body;
+router.post("/register", async (req, res) => {
+  try {
+    const { email, password, firstName, lastName, resend } = req.body;
 
-      // Check if user exists
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        if (resend && !existingUser.emailVerified) {
-          // Resend code
-          const verificationCode = Math.floor(
-            100000 + Math.random() * 900000
-          ).toString();
-          existingUser.emailVerificationCode = verificationCode;
-          existingUser.emailVerificationExpires = Date.now() + 15 * 60 * 1000;
-          await existingUser.save();
-          await sendEmail({
-            to: existingUser.email,
-            subject: "Verify your email",
-            text: `Your verification code is: ${verificationCode}`,
-            html: `<p>Your verification code is: <b>${verificationCode}</b></p>`,
-          });
-          return res.status(200).json({ message: "Verification code resent" });
-        }
-        return res.status(400).json({ message: "Пользователь уже существует" });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      if (resend && !existingUser.emailVerified) {
+        const verificationCode = Math.floor(
+          100000 + Math.random() * 900000
+        ).toString();
+        existingUser.emailVerificationCode = verificationCode;
+        existingUser.emailVerificationExpires = Date.now() + 15 * 60 * 1000;
+        await existingUser.save();
+        await sendEmail({
+          to: existingUser.email,
+          subject: "Verify your email",
+          text: `Your verification code is: ${verificationCode}`,
+          html: `<p>Your verification code is: <b>${verificationCode}</b></p>`,
+        });
+        return res.status(200).json({ message: "Verification code resent" });
       }
-
-      // Create user
-      const user = new User({
-        email,
-        password,
-        firstName,
-        lastName,
-      });
-
-      // Generate verification code
-      const verificationCode = Math.floor(
-        100000 + Math.random() * 900000
-      ).toString();
-      user.emailVerificationCode = verificationCode;
-      user.emailVerificationExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
-      await user.save();
-
-      // Send verification email
-      await sendEmail({
-        to: user.email,
-        subject: "Verify your email",
-        text: `Your verification code is: ${verificationCode}`,
-        html: `<p>Your verification code is: <b>${verificationCode}</b></p>`,
-      });
-
-      res.status(201).json({
-        message:
-          "Verification code sent to your email. Please verify to complete registration.",
-        user: {
-          id: user._id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          emailVerified: user.emailVerified,
-        },
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Ошибка сервера" });
+      return res.status(400).json({ message: "Пользователь уже существует" });
     }
+
+    const user = new User({
+      email,
+      password,
+      firstName,
+      lastName,
+    });
+
+    // Generate verification code
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+    user.emailVerificationCode = verificationCode;
+    user.emailVerificationExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
+    await user.save();
+
+    // Send verification email
+    await sendEmail({
+      to: user.email,
+      subject: "Verify your email",
+      text: `Your verification code is: ${verificationCode}`,
+      html: `<p>Your verification code is: <b>${verificationCode}</b></p>`,
+    });
+
+    res.status(201).json({
+      message:
+        "Verification code sent to your email. Please verify to complete registration.",
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        emailVerified: user.emailVerified,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Ошибка сервера" });
   }
-);
+});
 
 // Email verification endpoint
 router.post("/verify-email", async (req, res) => {
