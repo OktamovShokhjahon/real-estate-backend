@@ -72,9 +72,19 @@ router.post(
     try {
       const reviewData = req.body;
 
-      // Filter profanity
-      reviewData.reviewText = filter.clean(reviewData.reviewText);
-      reviewData.landlordName = filter.clean(reviewData.landlordName);
+      // Filter profanity, but only if the fields are non-empty strings
+      if (
+        typeof reviewData.reviewText === "string" &&
+        reviewData.reviewText.length > 0
+      ) {
+        reviewData.reviewText = filter.clean(reviewData.reviewText);
+      }
+      if (
+        typeof reviewData.landlordName === "string" &&
+        reviewData.landlordName.length > 0
+      ) {
+        reviewData.landlordName = filter.clean(reviewData.landlordName);
+      }
 
       const review = new PropertyReview({
         ...reviewData,
