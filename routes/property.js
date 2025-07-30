@@ -65,9 +65,9 @@ router.get(
 router.post(
   "/reviews",
   auth,
-  validationMiddleware.sanitizeInput,
-  validationMiddleware.validatePropertyReview,
-  validationMiddleware.handleValidationErrors,
+  // validationMiddleware.sanitizeInput,
+  // validationMiddleware.validatePropertyReview,
+  // validationMiddleware.handleValidationErrors,
   async (req, res) => {
     try {
       const reviewData = req.body;
