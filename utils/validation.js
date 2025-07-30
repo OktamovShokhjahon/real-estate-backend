@@ -1,5 +1,8 @@
 // Comprehensive validation utilities with regex patterns
 
+// Cyrillic Unicode range for all blocks - updated for better Russian support
+const cyrillic = "\\u0400-\\u04FF\\u0500-\\u052F\\u2DE0-\\u2DFF\\uA640-\\uA69F\\u1C80-\\u1C8F";
+
 const validationPatterns = {
   // Email validation (RFC 5322 compliant)
   email:
@@ -8,17 +11,17 @@ const validationPatterns = {
   // Password validation (8+ chars, at least 1 uppercase, 1 lowercase, 1 number)
   password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/,
 
-  // Name validation (letters, spaces, hyphens, apostrophes)
-  name: /^[a-zA-Z\s\-']{2,50}$/,
+  // Name validation (letters, spaces, hyphens, apostrophes, supports full Cyrillic)
+  name: new RegExp(`^[a-zA-Z${cyrillic}\\s\\-']{2,50}$`),
 
-  // City name validation (letters, spaces, hyphens, periods)
-  city: /^[a-zA-Z\s\-\.]{2,100}$/,
+  // City name validation (letters, spaces, hyphens, periods, supports full Cyrillic)
+  city: new RegExp(`^[a-zA-Z${cyrillic}\\s\\-\\.]{2,100}$`),
 
-  // Street name validation (letters, numbers, spaces, common punctuation)
-  street: /^[a-zA-Z0-9\s\-\.\,\']{2,200}$/,
+  // Street name validation (letters, numbers, spaces, common punctuation, supports full Cyrillic)
+  street: new RegExp(`^[a-zA-Z${cyrillic}0-9\\s\\-\\.\\,\\']{2,200}$`),
 
-  // Building number/name validation (alphanumeric with common symbols)
-  building: /^[a-zA-Z0-9\s\-\.\,\'\/]{1,50}$/,
+  // Building number/name validation (alphanumeric with common symbols, supports full Cyrillic)
+  building: new RegExp(`^[a-zA-Z${cyrillic}0-9\\s\\-\\.\\,\\'\\/]{1,50}$`),
 
   // Apartment number validation (alphanumeric with hyphens)
   apartmentNumber: /^[a-zA-Z0-9\-]{1,20}$/,
@@ -35,11 +38,13 @@ const validationPatterns = {
   // ID last 4 digits
   idLastFour: /^[0-9]{4}$/,
 
-  // Landlord name validation (similar to name but more flexible)
-  landlordName: /^[a-zA-Z\s\-\.']{2,100}$/,
+  // Landlord name validation (similar to name but more flexible, supports full Cyrillic)
+  landlordName: new RegExp(`^[a-zA-Z${cyrillic}\\s\\-\\.']{2,100}$`),
 
-  // Review text validation (letters, numbers, spaces, punctuation)
-  reviewText: /^[\w\s\.\,\!\?\;\:\-\'\"$$$$\[\]\/\&\%\$\#\@\+\=\*]{10,5000}$/,
+  // Review text validation (letters, numbers, spaces, punctuation, supports full Cyrillic)
+  reviewText: new RegExp(
+    `^[\\w${cyrillic}\\s\\.\\,\\!\\?\\;\\:\\-\\'\\"\\$\\[\\]\\/\\&\\%\\#\\@\\+\\=\\*]{10,5000}$`
+  ),
 
   // Rating validation (1-5)
   rating: /^[1-5]$/,
@@ -81,14 +86,16 @@ const validationPatterns = {
   // Credit card number (basic validation)
   creditCard: /^[0-9]{13,19}$/,
 
-  // Tenant full name (more restrictive than general name)
-  tenantFullName: /^[a-zA-Z\s\-'\.]{2,100}$/,
+  // Tenant full name (more restrictive than general name, supports full Cyrillic)
+  tenantFullName: new RegExp(`^[a-zA-Z${cyrillic}\\s\\-'\.]{2,100}$`),
 
-  // Search query validation (prevent injection)
-  searchQuery: /^[a-zA-Z0-9\s\-\.']{1,100}$/,
+  // Search query validation (prevent injection, supports full Cyrillic)
+  searchQuery: new RegExp(`^[a-zA-Z${cyrillic}0-9\\s\\-\\.']{1,100}$`),
 
-  // Comment text validation
-  commentText: /^[\w\s\.\,\!\?\;\:\-\'\"$$$$\[\]\/\&\%\$\#\@\+\=\*]{1,1000}$/,
+  // Comment text validation (supports full Cyrillic)
+  commentText: new RegExp(
+    `^[\\w${cyrillic}\\s\\.\\,\\!\\?\\;\\:\\-\\'\\"\\$\\[\\]\\/\\&\\%\\#\\@\\+\\=\\*]{1,1000}$`
+  ),
 
   // Role validation
   userRole: /^(user|admin|moderator)$/,
@@ -184,7 +191,7 @@ const sanitizers = {
     if (typeof name !== "string") return "";
     return name
       .trim()
-      .replace(/[^a-zA-Z\s\-'\.]/g, "")
+      .replace(new RegExp(`[^a-zA-Z${cyrillic}\\s\\-'\\.]`, "g"), "")
       .substring(0, 50);
   },
 
@@ -197,7 +204,7 @@ const sanitizers = {
     if (typeof city !== "string") return "";
     return city
       .trim()
-      .replace(/[^a-zA-Z\s\-\.]/g, "")
+      .replace(new RegExp(`[^a-zA-Z${cyrillic}\\s\\-\\.]`, "g"), "")
       .substring(0, 100);
   },
 
@@ -205,7 +212,7 @@ const sanitizers = {
     if (typeof street !== "string") return "";
     return street
       .trim()
-      .replace(/[^a-zA-Z0-9\s\-\.\,\']/g, "")
+      .replace(new RegExp(`[^a-zA-Z${cyrillic}0-9\\s\\-\\.\\,\\']`, "g"), "")
       .substring(0, 200);
   },
 
@@ -213,7 +220,7 @@ const sanitizers = {
     if (typeof building !== "string") return "";
     return building
       .trim()
-      .replace(/[^a-zA-Z0-9\s\-\.\,\'\/]/g, "")
+      .replace(new RegExp(`[^a-zA-Z${cyrillic}0-9\\s\\-\\.\\,\\'\\/]`, "g"), "")
       .substring(0, 50);
   },
 
@@ -226,7 +233,23 @@ const sanitizers = {
     if (typeof query !== "string") return "";
     return query
       .trim()
-      .replace(/[^a-zA-Z0-9\s\-\.']/g, "")
+      .replace(new RegExp(`[^a-zA-Z${cyrillic}0-9\\s\\-\\.']`, "g"), "")
+      .substring(0, 100);
+  },
+
+  sanitizeTenantFullName: (name) => {
+    if (typeof name !== "string") return "";
+    return name
+      .trim()
+      .replace(new RegExp(`[^a-zA-Z${cyrillic}\\s\\-'\\.]`, "g"), "")
+      .substring(0, 100);
+  },
+
+  sanitizeLandlordName: (name) => {
+    if (typeof name !== "string") return "";
+    return name
+      .trim()
+      .replace(new RegExp(`[^a-zA-Z${cyrillic}\\s\\-\\.']`, "g"), "")
       .substring(0, 100);
   },
 

@@ -460,10 +460,10 @@ const validationMiddleware = {
       req.body.reviewText = sanitizers.sanitizeReviewText(req.body.reviewText);
     }
     if (req.body.landlordName) {
-      req.body.landlordName = sanitizers.sanitizeName(req.body.landlordName);
+      req.body.landlordName = sanitizers.sanitizeLandlordName(req.body.landlordName);
     }
     if (req.body.tenantFullName) {
-      req.body.tenantFullName = sanitizers.sanitizeName(
+      req.body.tenantFullName = sanitizers.sanitizeTenantFullName(
         req.body.tenantFullName
       );
     }
