@@ -14,6 +14,14 @@ router.post("/register", async (req, res) => {
   try {
     const { email, password, firstName, lastName, resend } = req.body;
 
+    // Check for email env vars
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+      return res.status(500).json({
+        message:
+          "Email service not configured. Please set EMAIL_USER and EMAIL_PASSWORD in backend/.env.",
+      });
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       if (resend && !existingUser.emailVerified) {
@@ -23,12 +31,22 @@ router.post("/register", async (req, res) => {
         existingUser.emailVerificationCode = verificationCode;
         existingUser.emailVerificationExpires = Date.now() + 15 * 60 * 1000;
         await existingUser.save();
-        await sendEmail({
-          to: existingUser.email,
-          subject: "Verify your email",
-          text: `Your verification code is: ${verificationCode}`,
-          html: `<p>Your verification code is: <b>${verificationCode}</b></p>`,
-        });
+        try {
+          await sendEmail({
+            to: existingUser.email,
+            subject: "ProKvartiru.kz - Подтверждение email",
+            text: `Ваш код подтверждения: ${verificationCode}`,
+            html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #333;">ProKvartiru.kz</h2>
+              <p>Ваш код подтверждения: <b style="font-size: 24px; color: #007bff;">${verificationCode}</b></p>
+              <p style="color: #666; font-size: 14px;">С уважением,<br>Команда ProKvartiru.kz</p>
+            </div>`,
+          });
+        } catch (emailError) {
+          return res.status(500).json({
+            message: `Failed to send verification email: ${emailError.message}`,
+          });
+        }
         return res.status(200).json({ message: "Verification code resent" });
       }
       return res.status(400).json({ message: "Пользователь уже существует" });
@@ -50,12 +68,22 @@ router.post("/register", async (req, res) => {
     await user.save();
 
     // Send verification email
-    await sendEmail({
-      to: user.email,
-      subject: "Verify your email",
-      text: `Your verification code is: ${verificationCode}`,
-      html: `<p>Your verification code is: <b>${verificationCode}</b></p>`,
-    });
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "ProKvartiru.kz - Подтверждение email",
+        text: `Ваш код подтверждения: ${verificationCode}`,
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">ProKvartiru.kz</h2>
+          <p>Ваш код подтверждения: <b style="font-size: 24px; color: #007bff;">${verificationCode}</b></p>
+          <p style="color: #666; font-size: 14px;">С уважением,<br>Команда ProKvartiru.kz</p>
+        </div>`,
+      });
+    } catch (emailError) {
+      return res.status(500).json({
+        message: `Failed to send verification email: ${emailError.message}`,
+      });
+    }
 
     res.status(201).json({
       message:
@@ -71,7 +99,7 @@ router.post("/register", async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Ошибка сервера" });
+    res.status(500).json({ message: error.message || "Ошибка сервера" });
   }
 });
 
@@ -123,12 +151,7 @@ router.post(
         return res.status(400).json({ message: "Неверные учетные данные" });
       }
 
-      // Check if email is verified
-      if (!user.emailVerified) {
-        return res
-          .status(400)
-          .json({ message: "Please verify your email before logging in." });
-      }
+      // Email verification check removed - users can login without email verification
 
       // Check password
       const isMatch = await user.comparePassword(password);

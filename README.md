@@ -1,1 +1,1 @@
-# real-estate-backend
+# ProKvartiru.kz Backend

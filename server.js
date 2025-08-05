@@ -37,8 +37,8 @@ app.use(express.urlencoded({ extended: true }));
 // Database connection
 mongoose
   .connect(
-    process.env.MONGODB_URI ||
-      "mongodb+srv://leetcoder24:FTXR7Hd1x06GW880@cluster0.1iqah.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+    process.env.MONGODB_URI || "mongodb://127.0.0.1/prokvartirukz",
+    // "mongodb+srv://leetcoder24:FTXR7Hd1x06GW880@cluster0.1iqah.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
     {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -57,6 +57,23 @@ app.use("/api/user", userRoutes);
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
+});
+
+// Test email endpoint
+const { sendEmail } = require("./utils/email");
+app.get("/api/test-email", async (req, res) => {
+  try {
+    const to = req.query.to || process.env.EMAIL_USER;
+    await sendEmail({
+      to,
+      subject: "Test Email from ProKvartiru.kz",
+      text: "This is a test email. If you received this, your email setup works!",
+      html: "<h1>Test Email</h1><p>This is a test email. If you received this, your email setup works!</p>",
+    });
+    res.json({ message: `Test email sent to ${to}` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Error handling middleware

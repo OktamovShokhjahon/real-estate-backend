@@ -72,18 +72,27 @@ router.post(
     try {
       const reviewData = req.body;
 
-      // Filter profanity, but only if the fields are non-empty strings
+      // Safely filter profanity, only if the fields are non-empty strings and not null/undefined
       if (
         typeof reviewData.reviewText === "string" &&
-        reviewData.reviewText.length > 0
+        reviewData.reviewText.trim().length > 0
       ) {
-        reviewData.reviewText = filter.clean(reviewData.reviewText);
+        try {
+          reviewData.reviewText = filter.clean(reviewData.reviewText);
+        } catch (e) {
+          // If filter.clean throws, fallback to original text
+          reviewData.reviewText = reviewData.reviewText;
+        }
       }
       if (
         typeof reviewData.landlordName === "string" &&
-        reviewData.landlordName.length > 0
+        reviewData.landlordName.trim().length > 0
       ) {
-        reviewData.landlordName = filter.clean(reviewData.landlordName);
+        try {
+          reviewData.landlordName = filter.clean(reviewData.landlordName);
+        } catch (e) {
+          reviewData.landlordName = reviewData.landlordName;
+        }
       }
 
       const review = new PropertyReview({
