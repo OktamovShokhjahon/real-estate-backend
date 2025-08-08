@@ -26,6 +26,7 @@ app.use(
       "http://85.202.193.186:4100",
       "http://85.202.193.186",
       "http://85.202.193.186/",
+      "https://prokvartiru.kz/api/",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
