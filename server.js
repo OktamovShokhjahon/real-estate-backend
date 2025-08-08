@@ -15,13 +15,13 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors());
-// app.use(
-//   cors({
-//     origin: process.env.FRONTEND_URL || "http://localhost:3000",
-//     credentials: true,
-//   })
-// );
+// app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "https://prokvartiru.kz/",
+    credentials: true,
+  })
+);
 
 // Rate limiting
 const limiter = rateLimit({
