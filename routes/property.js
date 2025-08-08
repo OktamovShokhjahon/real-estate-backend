@@ -1,5 +1,6 @@
 const express = require("express");
 const PropertyReview = require("../models/PropertyReview");
+const RememberedAddress = require("../models/RememberedAddress");
 const { auth } = require("../middleware/auth");
 const validationMiddleware = require("../middleware/validation");
 const Filter = require("bad-words");
@@ -102,6 +103,28 @@ router.post(
 
       await review.save();
       await review.populate("author", "firstName lastName");
+
+      // Save the address to remembered addresses
+      try {
+        await RememberedAddress.findOneAndUpdate(
+          {
+            city: reviewData.city.trim(),
+            street: reviewData.street.trim(),
+            building: reviewData.building.trim(),
+          },
+          {
+            $inc: { usageCount: 1 },
+            $set: { lastUsed: new Date() },
+          },
+          {
+            upsert: true,
+            new: true,
+          }
+        );
+      } catch (addressError) {
+        console.error("Error saving remembered address:", addressError);
+        // Don't fail the review creation if address saving fails
+      }
 
       res.status(201).json(review);
     } catch (error) {

@@ -10,6 +10,8 @@ const propertyRoutes = require("./routes/property");
 const tenantRoutes = require("./routes/tenant");
 const adminRoutes = require("./routes/admin");
 const userRoutes = require("./routes/user");
+const addressRoutes = require("./routes/addresses");
+const recommendationRoutes = require("./routes/recommendations");
 
 const app = express();
 
@@ -19,7 +21,9 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
+      "http://localhost:5173/",
+      "http://localhost:3000/",
+      "http://localhost:3000",
       "https://prokvartiru.kz/",
       "http://prokvartiru.kz/",
       "http://85.202.193.186:4100/",
@@ -62,6 +66,8 @@ app.use("/api/property", propertyRoutes);
 app.use("/api/tenant", tenantRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/addresses", addressRoutes);
+app.use("/api/recommendations", recommendationRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
