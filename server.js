@@ -14,7 +14,7 @@ const userRoutes = require("./routes/user");
 const app = express();
 
 // Security middleware
-app.use(helmet());
+// app.use(helmet());
 // app.use(cors());
 app.use(
   cors({
@@ -22,9 +22,12 @@ app.use(
       "http://localhost:5173",
       "https://prokvartiru.kz/",
       "http://prokvartiru.kz/",
+      "http://85.202.193.186:4100/",
+      "http://85.202.193.186:4100",
+      "http://85.202.193.186",
+      "http://85.202.193.186/",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
-    // credentials: true, // if you're using cookies
   })
 );
 
