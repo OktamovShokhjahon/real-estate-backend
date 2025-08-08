@@ -18,8 +18,13 @@ app.use(helmet());
 // app.use(cors());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "https://prokvartiru.kz/",
-    credentials: true,
+    origin: [
+      "http://localhost:5173",
+      "https://prokvartiru.kz/",
+      "http://prokvartiru.kz/",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    // credentials: true, // if you're using cookies
   })
 );
 
