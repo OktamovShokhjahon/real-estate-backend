@@ -5,9 +5,94 @@ const validationMiddleware = require("../middleware/validation");
 const Filter = require("bad-words");
 const { sendEmail } = require("../utils/email");
 const User = require("../models/User");
+const axios = require("axios");
 
 const router = express.Router();
 const filter = new Filter();
+
+// --- City search proxy endpoint ---
+// Allows searching for cities, but also allows any city to be entered if not found in suggestions
+router.get("/addresses/search", async (req, res) => {
+  try {
+    const q = req.query.q;
+    const limit = req.query.limit || 5;
+    if (!q) {
+      return res.status(400).json({ message: "Missing query parameter 'q'" });
+    }
+    // Proxy to prokvartiru.kz city API
+    const apiUrl = `https://prokvartiru.kz/api/addresses/search?q=${encodeURIComponent(
+      q
+    )}&limit=${limit}`;
+    const response = await axios.get(apiUrl, { timeout: 5000 });
+    // Always return the user's query as an option, even if not in suggestions
+    let suggestions =
+      response.data && Array.isArray(response.data) ? response.data : [];
+    // If the query is not in suggestions, add it as a "custom" option
+    if (!suggestions.some((item) => item.toLowerCase() === q.toLowerCase())) {
+      suggestions = [
+        { name: q, custom: true },
+        ...suggestions.map((name) => ({ name })),
+      ];
+    } else {
+      suggestions = suggestions.map((name) => ({ name }));
+    }
+    res.json(suggestions);
+  } catch (error) {
+    // On error, still allow the user to enter their own city
+    res.json([{ name: req.query.q, custom: true }]);
+  }
+});
+
+// --- Street search proxy endpoint ---
+// Allows searching for streets, but also allows any street to be entered if not found in suggestions
+router.get("/addresses/streets/search", async (req, res) => {
+  try {
+    const q = req.query.q;
+    const limit = req.query.limit || 10;
+    if (!q) {
+      return res.status(400).json({ message: "Missing query parameter 'q'" });
+    }
+    // Proxy to OpenStreetMap Nominatim API
+    const apiUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+      q
+    )}&format=json&addressdetails=1&limit=${limit}&featuretype=street`;
+    const response = await axios.get(apiUrl, {
+      headers: { "User-Agent": "prokvartiru.kz/1.0" },
+      timeout: 5000,
+    });
+    let suggestions = [];
+    if (Array.isArray(response.data)) {
+      suggestions = response.data
+        .map((item) => {
+          // Try to get street name from address object or display_name
+          if (item.address && item.address.road) {
+            return item.address.road;
+          }
+          if (item.display_name) {
+            // Sometimes display_name is "улица Абая, Алматы, Казахстан"
+            return item.display_name.split(",")[0].trim();
+          }
+          return null;
+        })
+        .filter(Boolean);
+    }
+    // Remove duplicates
+    suggestions = [...new Set(suggestions)];
+    // If the query is not in suggestions, add it as a "custom" option
+    if (!suggestions.some((name) => name.toLowerCase() === q.toLowerCase())) {
+      suggestions = [
+        { name: q, custom: true },
+        ...suggestions.map((name) => ({ name })),
+      ];
+    } else {
+      suggestions = suggestions.map((name) => ({ name }));
+    }
+    res.json(suggestions);
+  } catch (error) {
+    // On error, still allow the user to enter their own street
+    res.json([{ name: req.query.q, custom: true }]);
+  }
+});
 
 // Get tenant reviews with search and pagination
 router.get(
@@ -69,9 +154,11 @@ router.post(
     try {
       const reviewData = req.body;
 
+      console.log(reviewData);
+
       // Filter profanity
-      reviewData.reviewText = filter.clean(reviewData.reviewText);
-      reviewData.tenantFullName = filter.clean(reviewData.tenantFullName);
+      // reviewData.reviewText = filter.clean(reviewData.reviewText);
+      // reviewData.tenantFullName = filter.clean(reviewData.tenantFullName);
 
       const review = new TenantReview({
         ...reviewData,

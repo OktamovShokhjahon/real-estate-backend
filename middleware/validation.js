@@ -200,6 +200,72 @@ const validationMiddleware = {
         }
         return true;
       }),
+    // Validate new comprehensive ratings
+    body("ratings.apartment")
+      .optional()
+      .custom((value) => {
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          !validators.isValidRating(value)
+        ) {
+          throw new Error("Рейтинг квартиры должен быть от 1 до 5");
+        }
+        return true;
+      }),
+    body("ratings.residentialComplex")
+      .optional()
+      .custom((value) => {
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          !validators.isValidRating(value)
+        ) {
+          throw new Error("Рейтинг жилого комплекса должен быть от 1 до 5");
+        }
+        return true;
+      }),
+    body("ratings.courtyard")
+      .optional()
+      .custom((value) => {
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          !validators.isValidRating(value)
+        ) {
+          throw new Error("Рейтинг двора должен быть от 1 до 5");
+        }
+        return true;
+      }),
+    body("ratings.parking")
+      .optional()
+      .custom((value) => {
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          !validators.isValidRating(value)
+        ) {
+          throw new Error("Рейтинг парковки должен быть от 1 до 5");
+        }
+        return true;
+      }),
+    body("ratings.infrastructure")
+      .optional()
+      .custom((value) => {
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          !validators.isValidRating(value)
+        ) {
+          throw new Error("Рейтинг инфраструктуры должен быть от 1 до 5");
+        }
+        return true;
+      }),
   ],
 
   // Tenant review validation
@@ -460,7 +526,9 @@ const validationMiddleware = {
       req.body.reviewText = sanitizers.sanitizeReviewText(req.body.reviewText);
     }
     if (req.body.landlordName) {
-      req.body.landlordName = sanitizers.sanitizeLandlordName(req.body.landlordName);
+      req.body.landlordName = sanitizers.sanitizeLandlordName(
+        req.body.landlordName
+      );
     }
     if (req.body.tenantFullName) {
       req.body.tenantFullName = sanitizers.sanitizeTenantFullName(
