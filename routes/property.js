@@ -1,5 +1,6 @@
 const express = require("express");
 const PropertyReview = require("../models/PropertyReview");
+const TenantReview = require("../models/TenantReview");
 const RememberedAddress = require("../models/RememberedAddress");
 const { auth } = require("../middleware/auth");
 const validationMiddleware = require("../middleware/validation");
@@ -10,7 +11,216 @@ const User = require("../models/User");
 const router = express.Router();
 const filter = new Filter();
 
-// Get property reviews with search and pagination
+/**
+ * Миксованный поиск отзывов по адресу (квартира, ЖК, арендодатель, арендатор)
+ * GET /api/property/mixed-reviews?city=...&street=...&building=...
+ * Возвращает объект с тремя массивами: propertyReviews, residentialComplexReviews, landlordReviews, tenantReviews
+ */
+router.get(
+  "/mixed-reviews",
+  validationMiddleware.sanitizeInput,
+  async (req, res) => {
+    try {
+      const page = Number.parseInt(req.query.page) || 1;
+      const limit = Number.parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      // Build base search query for address
+      const addressQuery = { isApproved: true };
+      if (req.query.city) {
+        addressQuery.city = new RegExp(req.query.city, "i");
+      }
+      if (req.query.street) {
+        addressQuery.street = new RegExp(req.query.street, "i");
+      }
+      if (req.query.building) {
+        addressQuery.building = new RegExp(req.query.building, "i");
+      }
+      const hasAddressFilter = Boolean(
+        req.query.city || req.query.street || req.query.building
+      );
+
+      // Найдём авторов, у которых есть PropertyReview по указанному адресу (только если фильтруем по адресу)
+      const matchingAuthorIds = hasAddressFilter
+        ? await PropertyReview.distinct("author", addressQuery)
+        : [];
+
+      // Подтянем последние адреса для этих авторов (для использования в tenant reviews)
+      const propertyReviewsForAuthors = hasAddressFilter
+        ? await PropertyReview.find({
+            ...addressQuery,
+            author: { $in: matchingAuthorIds },
+          })
+            .sort({ createdAt: -1 })
+            .select("author city street building createdAt")
+        : [];
+
+      const authorToAddress = new Map();
+      for (const pr of propertyReviewsForAuthors) {
+        const key = pr.author.toString();
+        if (!authorToAddress.has(key)) {
+          authorToAddress.set(key, {
+            city: pr.city,
+            street: pr.street,
+            building: pr.building,
+          });
+        }
+      }
+
+      // 1. Отзывы о квартирах (основные отзывы)
+      const propertyReviewsPromise = PropertyReview.find({
+        ...addressQuery,
+        reviewType: { $in: [null, "property", undefined] }, // либо не указан, либо явно property
+      })
+        .populate("author", "firstName lastName")
+        .populate("comments.author", "firstName lastName")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .then((reviews) =>
+          reviews.map((review) => ({
+            ...review.toObject(),
+            title: `Отзыв о квартире: ${review.city}, ${review.street}, ${review.building}`,
+            content: review.reviewText,
+            reviewType: "property",
+            comments: review.comments?.map((comment) => ({
+              ...comment.toObject(),
+              content: comment.text,
+            })),
+          }))
+        );
+
+      // 2. Отзывы о ЖК
+      const residentialComplexReviewsPromise = PropertyReview.find({
+        ...addressQuery,
+        reviewType: "residentialComplex",
+      })
+        .populate("author", "firstName lastName")
+        .populate("comments.author", "firstName lastName")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .then((reviews) =>
+          reviews.map((review) => ({
+            ...review.toObject(),
+            title: `Отзыв о ЖК: ${review.city}, ${review.street}, ${review.building}`,
+            content: review.reviewText,
+            reviewType: "residentialComplex",
+            comments: review.comments?.map((comment) => ({
+              ...comment.toObject(),
+              content: comment.text,
+            })),
+          }))
+        );
+
+      // 3. Отзывы об арендодателях
+      const landlordReviewsPromise = PropertyReview.find({
+        ...addressQuery,
+        reviewType: "landlord",
+      })
+        .populate("author", "firstName lastName")
+        .populate("comments.author", "firstName lastName")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .then((reviews) =>
+          reviews.map((review) => ({
+            ...review.toObject(),
+            title: `Отзыв об арендодателе: ${review.city}, ${review.street}, ${review.building}`,
+            content: review.reviewText,
+            reviewType: "landlord",
+            comments: review.comments?.map((comment) => ({
+              ...comment.toObject(),
+              content: comment.text,
+            })),
+          }))
+        );
+
+      // 5. Отзывы об арендаторах (из TenantReview)
+      const tenantFilter = { isApproved: true };
+      if (hasAddressFilter) {
+        tenantFilter.author = { $in: matchingAuthorIds };
+      }
+      if (req.query.idLastFour) {
+        tenantFilter.tenantIdLastFour = req.query.idLastFour;
+      }
+      if (req.query.phoneLastFour) {
+        tenantFilter.tenantPhoneLastFour = req.query.phoneLastFour;
+      }
+
+      const tenantReviewsPromise = TenantReview.find(tenantFilter)
+        .populate("author", "firstName lastName")
+        .populate("comments.author", "firstName lastName")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .then((reviews) =>
+          reviews.map((review) => {
+            const addr =
+              review.author &&
+              authorToAddress.get(review.author._id.toString());
+            return {
+              ...review.toObject(),
+              ...(addr || {}),
+              title: `Отзыв об арендаторе: ${review.tenantFullName}`,
+              content: review.reviewText,
+              reviewType: "tenant",
+              comments: review.comments?.map((comment) => ({
+                ...comment.toObject(),
+                content: comment.text,
+              })),
+            };
+          })
+        );
+
+      // Считаем total для пагинации по каждому типу
+      const [
+        propertyReviews,
+        residentialComplexReviews,
+        landlordReviews,
+        tenantReviews,
+        propertyTotal,
+        residentialComplexTotal,
+        landlordTotal,
+        tenantTotal,
+      ] = await Promise.all([
+        propertyReviewsPromise,
+        residentialComplexReviewsPromise,
+        landlordReviewsPromise,
+        tenantReviewsPromise,
+        PropertyReview.countDocuments({
+          ...addressQuery,
+          reviewType: { $in: [null, "property", undefined] },
+        }),
+        PropertyReview.countDocuments({
+          ...addressQuery,
+          reviewType: "residentialComplex",
+        }),
+        PropertyReview.countDocuments({
+          ...addressQuery,
+          reviewType: "landlord",
+        }),
+        TenantReview.countDocuments(tenantFilter),
+      ]);
+
+      res.json({
+        propertyReviews,
+        residentialComplexReviews,
+        landlordReviews,
+        tenantReviews,
+        propertyTotal,
+        residentialComplexTotal,
+        landlordTotal,
+        tenantTotal,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+// Get property reviews with search and pagination (legacy, only квартиры)
 router.get(
   "/reviews",
   validationMiddleware.sanitizeInput,
@@ -37,6 +247,9 @@ router.get(
       if (req.query.rooms) {
         searchQuery.numberOfRooms = Number.parseInt(req.query.rooms);
       }
+
+      // Только отзывы о квартирах (reviewType: null, undefined, или "property")
+      searchQuery.reviewType = { $in: [null, "property", undefined] };
 
       const reviews = await PropertyReview.find(searchQuery)
         .populate("author", "firstName lastName")

@@ -19,21 +19,23 @@ const app = express();
 // app.use(helmet());
 // app.use(cors());
 app.use(
-  cors({
-    origin: [
-      "http://localhost:5173/",
-      "http://localhost:3000/",
-      "http://localhost:3000",
-      "https://prokvartiru.kz/",
-      "http://prokvartiru.kz/",
-      "http://85.202.193.186:4100/",
-      "http://85.202.193.186:4100",
-      "http://85.202.193.186",
-      "http://85.202.193.186/",
-      "https://prokvartiru.kz/api/",
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  })
+  cors()
+  //   {
+  //   origin: [
+  //     "http://localhost:5173/",
+  //     "http://localhost:3000/",
+  //     "http://localhost:3000",
+  //     "http://localhost:3000/admin/",
+  //     "https://prokvartiru.kz/",
+  //     "http://prokvartiru.kz/",
+  //     "http://85.202.193.186:4100/",
+  //     "http://85.202.193.186:4100",
+  //     "http://85.202.193.186",
+  //     "http://85.202.193.186/",
+  //     "https://prokvartiru.kz/api/",
+  //   ],
+  //   methods: ["GET", "POST", "PUT", "DELETE"],
+  // }
 );
 
 // Rate limiting
