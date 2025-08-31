@@ -145,19 +145,23 @@ router.post(
     try {
       const { email, password } = req.body;
 
+      console.log(email, password);
+
       // Check if user exists
       const user = await User.findOne({ email });
       if (!user) {
         return res.status(400).json({ message: "Неверные учетные данные" });
       }
 
-      // Email verification check removed - users can login without email verification
+      console.log(user);
 
       // Check password
       const isMatch = await user.comparePassword(password);
       if (!isMatch) {
         return res.status(400).json({ message: "Неверные учетные данные" });
       }
+
+      console.log(isMatch);
 
       // Update last login
       user.lastLogin = new Date();
@@ -181,8 +185,20 @@ router.post(
           emailVerified: user.emailVerified,
         },
       });
+
+      console.log({
+        token,
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          emailVerified: user.emailVerified,
+        },
+      });
     } catch (error) {
-      console.error(error);
+      console.log(error);
       res.status(500).json({ message: "Ошибка сервера" });
     }
   }

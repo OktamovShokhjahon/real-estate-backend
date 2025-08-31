@@ -26,7 +26,6 @@ const propertyReviewSchema = new mongoose.Schema({
   },
   numberOfRooms: {
     type: Number,
-    // required: true,
     min: 1,
     max: 8,
   },
@@ -81,7 +80,6 @@ const propertyReviewSchema = new mongoose.Schema({
       required: false,
     },
   },
-  // Keep the old rating field for backward compatibility
   rating: {
     type: Number,
     min: 1,
