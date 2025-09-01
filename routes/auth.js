@@ -85,9 +85,25 @@ router.post("/register", async (req, res) => {
       });
     }
 
+    // Generate JWT token for the new user
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET || "fallback-secret",
+      { expiresIn: "7d" }
+    );
+
+    // Set httpOnly cookie with the token (same as in login)
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
     res.status(201).json({
       message:
         "Verification code sent to your email. Please verify to complete registration.",
+      token,
       user: {
         id: user._id,
         email: user.email,
@@ -173,6 +189,14 @@ router.post(
         process.env.JWT_SECRET || "fallback-secret",
         { expiresIn: "7d" }
       );
+
+      // Set httpOnly cookie with the token
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
 
       res.json({
         token,
