@@ -17,13 +17,37 @@ const app = express();
 
 // Security middleware
 // app.use(helmet());
-// app.use(cors());
+
+// --- CORS CONFIGURATION ---
+// Allow credentials and restrict origin to frontend URL(s)
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "https://prokvartiru.kz",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "https://prokvartiru.kz",
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
+      } else {
+        return callback(
+          new Error("CORS policy: This origin is not allowed: " + origin),
+          false
+        );
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+    ],
     exposedHeaders: ["Set-Cookie"],
   })
 );
