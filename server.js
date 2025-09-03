@@ -18,7 +18,15 @@ const app = express();
 // Security middleware
 // app.use(helmet());
 // app.use(cors());
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "https://prokvartiru.kz",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    exposedHeaders: ["Set-Cookie"],
+  })
+);
 
 // Rate limiting
 // const limiter = rateLimit({
@@ -73,6 +81,27 @@ app.get("/api/test-email", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// Test mobile browser compatibility endpoint
+app.get("/api/test-mobile", (req, res) => {
+  // Set a test cookie
+  res.cookie("test-cookie", "mobile-test", {
+    httpOnly: false, // Make it readable by JavaScript for testing
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "none",
+    maxAge: 60 * 1000, // 1 minute
+    path: "/",
+  });
+
+  res.json({
+    message: "Mobile test endpoint",
+    userAgent: req.headers["user-agent"],
+    cookies: req.headers.cookie,
+    origin: req.headers.origin,
+    referer: req.headers.referer,
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // Error handling middleware

@@ -95,9 +95,11 @@ router.post("/register", async (req, res) => {
     // Set httpOnly cookie with the token (same as in login)
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production", // Only require HTTPS in production
+      sameSite: "none", // More permissive for mobile browsers
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/",
+      domain: process.env.COOKIE_DOMAIN || undefined,
     });
 
     res.status(201).json({
