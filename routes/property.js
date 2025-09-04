@@ -278,7 +278,43 @@ router.get(
 router.post(
   "/reviews",
   auth,
-  validationMiddleware.validatePropertyReview,
+  // Custom validation middleware to ensure only the main rating is required
+  (req, res, next) => {
+    // Validate that ratings.apartment exists and is a number between 1 and 5
+    const ratings = req.body.ratings;
+    if (
+      !ratings ||
+      typeof ratings.apartment !== "number" ||
+      ratings.apartment < 1 ||
+      ratings.apartment > 5
+    ) {
+      return res.status(400).json({
+        message:
+          "Основная оценка квартиры (ratings.apartment) обязательна и должна быть числом от 1 до 5.",
+      });
+    }
+    // All other ratings are optional, but if present, must be numbers between 1 and 5
+    const optionalFields = [
+      "residentialComplex",
+      "courtyard",
+      "parking",
+      "infrastructure",
+    ];
+    for (const field of optionalFields) {
+      if (
+        ratings[field] !== undefined &&
+        ratings[field] !== null &&
+        (typeof ratings[field] !== "number" ||
+          ratings[field] < 1 ||
+          ratings[field] > 5)
+      ) {
+        return res.status(400).json({
+          message: `Оценка "${field}" должна быть числом от 1 до 5, если указана.`,
+        });
+      }
+    }
+    next();
+  },
   validationMiddleware.handleValidationErrors,
   async (req, res) => {
     try {
@@ -310,8 +346,18 @@ router.post(
         }
       }
 
-      // Only include fields that exist in reviewData
-      const reviewFields = { ...reviewData, author: req.user._id };
+      // --- BEGIN PATCH: Ensure "rating" field is set for Mongoose validation ---
+      // The PropertyReview schema requires a "rating" field.
+      // We'll set it to the main apartment rating.
+      // This ensures Mongoose validation passes and error in @file_context_0 is avoided.
+      let reviewFields = { ...reviewData, author: req.user._id };
+      if (
+        reviewData.ratings &&
+        typeof reviewData.ratings.apartment === "number"
+      ) {
+        reviewFields.rating = reviewData.ratings.apartment;
+      }
+      // --- END PATCH ---
 
       const review = new PropertyReview(reviewFields);
 
