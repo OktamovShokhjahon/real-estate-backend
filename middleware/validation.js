@@ -218,81 +218,11 @@ const validationMiddleware = {
         return true;
       }),
     body("rating")
-      .optional()
+      .isInt({ min: 1, max: 5 })
+      .withMessage("Рейтинг должен быть от 1 до 5")
       .custom((value) => {
-        if (
-          value !== undefined &&
-          value !== null &&
-          value !== "" &&
-          !validators.isValidRating(value)
-        ) {
+        if (!validators.isValidRating(value)) {
           throw new Error("Рейтинг должен быть от 1 до 5");
-        }
-        return true;
-      }),
-    // Validate new comprehensive ratings
-    body("ratings.apartment")
-      .optional()
-      .custom((value) => {
-        if (
-          value !== undefined &&
-          value !== null &&
-          value !== "" &&
-          !validators.isValidRating(value)
-        ) {
-          throw new Error("Рейтинг квартиры должен быть от 1 до 5");
-        }
-        return true;
-      }),
-    body("ratings.residentialComplex")
-      .optional()
-      .custom((value) => {
-        if (
-          value !== undefined &&
-          value !== null &&
-          value !== "" &&
-          !validators.isValidRating(value)
-        ) {
-          throw new Error("Рейтинг жилого комплекса должен быть от 1 до 5");
-        }
-        return true;
-      }),
-    body("ratings.courtyard")
-      .optional()
-      .custom((value) => {
-        if (
-          value !== undefined &&
-          value !== null &&
-          value !== "" &&
-          !validators.isValidRating(value)
-        ) {
-          throw new Error("Рейтинг двора должен быть от 1 до 5");
-        }
-        return true;
-      }),
-    body("ratings.parking")
-      .optional()
-      .custom((value) => {
-        if (
-          value !== undefined &&
-          value !== null &&
-          value !== "" &&
-          !validators.isValidRating(value)
-        ) {
-          throw new Error("Рейтинг парковки должен быть от 1 до 5");
-        }
-        return true;
-      }),
-    body("ratings.infrastructure")
-      .optional()
-      .custom((value) => {
-        if (
-          value !== undefined &&
-          value !== null &&
-          value !== "" &&
-          !validators.isValidRating(value)
-        ) {
-          throw new Error("Рейтинг инфраструктуры должен быть от 1 до 5");
         }
         return true;
       }),
