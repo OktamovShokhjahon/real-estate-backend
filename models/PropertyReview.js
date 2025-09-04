@@ -31,12 +31,12 @@ const propertyReviewSchema = new mongoose.Schema({
   },
   rentalPeriod: {
     from: {
-      month: { type: Number, required: true, min: 1, max: 12 },
-      year: { type: Number, required: true },
+      month: { type: Number, min: 1, max: 12 },
+      year: { type: Number },
     },
     to: {
-      month: { type: Number, required: true, min: 1, max: 12 },
-      year: { type: Number, required: true },
+      month: { type: Number, min: 1, max: 12 },
+      year: { type: Number },
     },
   },
   landlordName: {

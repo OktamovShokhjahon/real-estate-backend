@@ -275,84 +275,90 @@ router.get(
   }
 );
 
-router.post("/reviews", auth, async (req, res) => {
-  try {
-    const reviewData = req.body;
+router.post(
+  "/reviews",
+  auth,
+  validationMiddleware.validatePropertyReview,
+  validationMiddleware.handleValidationErrors,
+  async (req, res) => {
+    try {
+      const reviewData = req.body;
 
-    // Clean reviewText if it exists and is a non-empty string
-    if (
-      reviewData.reviewText &&
-      typeof reviewData.reviewText === "string" &&
-      reviewData.reviewText.trim().length > 0
-    ) {
-      try {
-        reviewData.reviewText = filter.clean(reviewData.reviewText);
-      } catch (e) {
-        reviewData.reviewText = reviewData.reviewText;
+      // Clean reviewText if it exists and is a non-empty string
+      if (
+        reviewData.reviewText &&
+        typeof reviewData.reviewText === "string" &&
+        reviewData.reviewText.trim().length > 0
+      ) {
+        try {
+          reviewData.reviewText = filter.clean(reviewData.reviewText);
+        } catch (e) {
+          reviewData.reviewText = reviewData.reviewText;
+        }
       }
-    }
 
-    // Clean landlordName if it exists and is a non-empty string
-    if (
-      reviewData.landlordName &&
-      typeof reviewData.landlordName === "string" &&
-      reviewData.landlordName.trim().length > 0
-    ) {
-      try {
-        reviewData.landlordName = filter.clean(reviewData.landlordName);
-      } catch (e) {
-        reviewData.landlordName = reviewData.landlordName;
+      // Clean landlordName if it exists and is a non-empty string
+      if (
+        reviewData.landlordName &&
+        typeof reviewData.landlordName === "string" &&
+        reviewData.landlordName.trim().length > 0
+      ) {
+        try {
+          reviewData.landlordName = filter.clean(reviewData.landlordName);
+        } catch (e) {
+          reviewData.landlordName = reviewData.landlordName;
+        }
       }
-    }
 
-    // Only include fields that exist in reviewData
-    const reviewFields = { ...reviewData, author: req.user._id };
+      // Only include fields that exist in reviewData
+      const reviewFields = { ...reviewData, author: req.user._id };
 
-    const review = new PropertyReview(reviewFields);
+      const review = new PropertyReview(reviewFields);
 
-    await review.save();
-    await review.populate("author", "firstName lastName");
+      await review.save();
+      await review.populate("author", "firstName lastName");
 
-    // Only update RememberedAddress if city, street, and building exist and are non-empty strings
-    if (
-      reviewData.city &&
-      typeof reviewData.city === "string" &&
-      reviewData.city.trim().length > 0 &&
-      reviewData.street &&
-      typeof reviewData.street === "string" &&
-      reviewData.street.trim().length > 0 &&
-      reviewData.building &&
-      typeof reviewData.building === "string" &&
-      reviewData.building.trim().length > 0
-    ) {
-      try {
-        await RememberedAddress.findOneAndUpdate(
-          {
-            city: reviewData.city.trim(),
-            street: reviewData.street.trim(),
-            building: reviewData.building.trim(),
-          },
-          {
-            $inc: { usageCount: 1 },
-            $set: { lastUsed: new Date() },
-          },
-          {
-            upsert: true,
-            new: true,
-          }
-        );
-      } catch (addressError) {
-        console.error("Error saving remembered address:", addressError);
-        // Don't fail the review creation if address saving fails
+      // Only update RememberedAddress if city, street, and building exist and are non-empty strings
+      if (
+        reviewData.city &&
+        typeof reviewData.city === "string" &&
+        reviewData.city.trim().length > 0 &&
+        reviewData.street &&
+        typeof reviewData.street === "string" &&
+        reviewData.street.trim().length > 0 &&
+        reviewData.building &&
+        typeof reviewData.building === "string" &&
+        reviewData.building.trim().length > 0
+      ) {
+        try {
+          await RememberedAddress.findOneAndUpdate(
+            {
+              city: reviewData.city.trim(),
+              street: reviewData.street.trim(),
+              building: reviewData.building.trim(),
+            },
+            {
+              $inc: { usageCount: 1 },
+              $set: { lastUsed: new Date() },
+            },
+            {
+              upsert: true,
+              new: true,
+            }
+          );
+        } catch (addressError) {
+          console.error("Error saving remembered address:", addressError);
+          // Don't fail the review creation if address saving fails
+        }
       }
-    }
 
-    res.status(201).json(review);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+      res.status(201).json(review);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
+    }
   }
-});
+);
 
 // Add comment to property review
 router.post(

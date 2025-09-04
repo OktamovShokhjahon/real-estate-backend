@@ -1,7 +1,8 @@
 // Comprehensive validation utilities with regex patterns
 
 // Cyrillic Unicode range for all blocks - updated for better Russian support
-const cyrillic = "\\u0400-\\u04FF\\u0500-\\u052F\\u2DE0-\\u2DFF\\uA640-\\uA69F\\u1C80-\\u1C8F";
+const cyrillic =
+  "\\u0400-\\u04FF\\u0500-\\u052F\\u2DE0-\\u2DFF\\uA640-\\uA69F\\u1C80-\\u1C8F";
 
 const validationPatterns = {
   // Email validation (RFC 5322 compliant)

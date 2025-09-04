@@ -123,57 +123,87 @@ const validationMiddleware = {
         return true;
       }),
     body("numberOfRooms")
-      .isInt({ min: 1, max: 8 })
-      .withMessage("Количество комнат должно быть от 1 до 8")
+      .optional()
       .custom((value) => {
-        if (!validators.isValidNumberOfRooms(value)) {
-          throw new Error("Количество комнат неверно");
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          !validators.isValidNumberOfRooms(value)
+        ) {
+          throw new Error("Количество комнат должно быть от 1 до 8");
         }
         return true;
       }),
     body("rentalPeriod.from.month")
-      .isInt({ min: 1, max: 12 })
-      .withMessage("Месяц начала должен быть от 1 до 12")
+      .optional()
       .custom((value) => {
-        if (!validators.isValidMonth(value)) {
-          throw new Error("Месяц начала неверен");
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          !validators.isValidMonth(value)
+        ) {
+          throw new Error("Месяц начала должен быть от 1 до 12");
         }
         return true;
       }),
     body("rentalPeriod.from.year")
-      .isInt({ min: 1900 })
-      .withMessage("Год начала должен быть 1900 или позже")
+      .optional()
       .custom((value) => {
-        if (!validators.isValidYear(value)) {
-          throw new Error("Год начала неверен");
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          !validators.isValidYear(value)
+        ) {
+          throw new Error("Год начала должен быть 1900 или позже");
         }
         return true;
       }),
     body("rentalPeriod.to.month")
-      .isInt({ min: 1, max: 12 })
-      .withMessage("Месяц окончания должен быть от 1 до 12")
+      .optional()
       .custom((value) => {
-        if (!validators.isValidMonth(value)) {
-          throw new Error("Месяц окончания неверен");
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          !validators.isValidMonth(value)
+        ) {
+          throw new Error("Месяц окончания должен быть от 1 до 12");
         }
         return true;
       }),
     body("rentalPeriod.to.year")
-      .isInt({ min: 1900 })
-      .withMessage("Год окончания должен быть 1900 или позже")
+      .optional()
       .custom((value) => {
-        if (!validators.isValidYear(value)) {
-          throw new Error("Год окончания неверен");
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          !validators.isValidYear(value)
+        ) {
+          throw new Error("Год окончания должен быть 1900 или позже");
         }
         return true;
       }),
     body("landlordName")
-      .trim()
-      .isLength({ min: 2, max: 100 })
-      .withMessage("Имя арендодателя должно содержать от 2 до 100 символов")
+      .optional()
       .custom((value) => {
-        if (!validators.isValidLandlordName(value)) {
-          throw new Error("Имя арендодателя содержит недопустимые символы");
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          value.trim().length > 0
+        ) {
+          if (value.trim().length < 2 || value.trim().length > 100) {
+            throw new Error(
+              "Имя арендодателя должно содержать от 2 до 100 символов"
+            );
+          }
+          if (!validators.isValidLandlordName(value)) {
+            throw new Error("Имя арендодателя содержит недопустимые символы");
+          }
         }
         return true;
       }),
@@ -303,38 +333,54 @@ const validationMiddleware = {
         return true;
       }),
     body("rentalPeriod.from.month")
-      .isInt({ min: 1, max: 12 })
-      .withMessage("Месяц начала должен быть от 1 до 12")
+      .optional()
       .custom((value) => {
-        if (!validators.isValidMonth(value)) {
-          throw new Error("Месяц начала неверен");
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          !validators.isValidMonth(value)
+        ) {
+          throw new Error("Месяц начала должен быть от 1 до 12");
         }
         return true;
       }),
     body("rentalPeriod.from.year")
-      .isInt({ min: 1900 })
-      .withMessage("Год начала должен быть 1900 или позже")
+      .optional()
       .custom((value) => {
-        if (!validators.isValidYear(value)) {
-          throw new Error("Год начала неверен");
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          !validators.isValidYear(value)
+        ) {
+          throw new Error("Год начала должен быть 1900 или позже");
         }
         return true;
       }),
     body("rentalPeriod.to.month")
-      .isInt({ min: 1, max: 12 })
-      .withMessage("Месяц окончания должен быть от 1 до 12")
+      .optional()
       .custom((value) => {
-        if (!validators.isValidMonth(value)) {
-          throw new Error("Месяц окончания неверен");
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          !validators.isValidMonth(value)
+        ) {
+          throw new Error("Месяц окончания должен быть от 1 до 12");
         }
         return true;
       }),
     body("rentalPeriod.to.year")
-      .isInt({ min: 1900 })
-      .withMessage("Год окончания должен быть 1900 или позже")
+      .optional()
       .custom((value) => {
-        if (!validators.isValidYear(value)) {
-          throw new Error("Год окончания неверен");
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          !validators.isValidYear(value)
+        ) {
+          throw new Error("Год окончания должен быть 1900 или позже");
         }
         return true;
       }),
