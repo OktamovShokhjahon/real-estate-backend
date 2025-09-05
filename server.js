@@ -21,19 +21,31 @@ const app = express();
 // --- CORS CONFIGURATION ---
 // Allow credentials and restrict origin to frontend URL(s)
 const allowedOrigins = [
-  process.env.FRONTEND_URL || "https://prokvartiru.kz",
+  "https://prokvartiru.kz",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
 ];
+
+// Also allow process.env.FRONTEND_URL if set and not already in the list
+if (
+  process.env.FRONTEND_URL &&
+  !allowedOrigins.includes(process.env.FRONTEND_URL)
+) {
+  allowedOrigins.unshift(process.env.FRONTEND_URL);
+}
 
 app.use(
   cors({
     origin: function (origin, callback) {
       // Allow requests with no origin (like mobile apps, curl, etc.)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      // Normalize origin to remove trailing slash if present
+      const normalizedOrigin = origin.replace(/\/$/, "");
+      if (allowedOrigins.includes(normalizedOrigin)) {
         return callback(null, true);
       } else {
+        // For debugging, log the rejected origin
+        console.error("CORS policy: This origin is not allowed:", origin);
         return callback(
           new Error("CORS policy: This origin is not allowed: " + origin),
           false
