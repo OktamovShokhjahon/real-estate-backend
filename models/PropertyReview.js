@@ -47,12 +47,7 @@ const propertyReviewSchema = new mongoose.Schema({
     required: true,
     maxlength: 5000,
   },
-  rating: {
-    type: Number,
-    min: 1,
-    max: 5,
-    required: true,
-  },
+  // "Оценка квартиры" (apartment rating) field REMOVED
   isApproved: {
     type: Boolean,
     default: false,

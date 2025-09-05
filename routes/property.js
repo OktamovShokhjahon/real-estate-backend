@@ -278,30 +278,19 @@ router.get(
 router.post(
   "/reviews",
   auth,
-  // Custom validation middleware to ensure only the main rating is required
+  // Validation middleware for ratings (no "оценка квартиры" / apartment rating)
   (req, res, next) => {
-    // Validate that ratings.apartment exists and is a number between 1 and 5
     const ratings = req.body.ratings;
-    if (
-      !ratings ||
-      typeof ratings.apartment !== "number" ||
-      ratings.apartment < 1 ||
-      ratings.apartment > 5
-    ) {
-      return res.status(400).json({
-        message:
-          "Основная оценка квартиры (ratings.apartment) обязательна и должна быть числом от 1 до 5.",
-      });
-    }
-    // All other ratings are optional, but if present, must be numbers between 1 and 5
-    const optionalFields = [
+    // All ratings are optional, but if present, must be numbers between 1 and 5
+    const allowedFields = [
       "residentialComplex",
       "courtyard",
       "parking",
       "infrastructure",
     ];
-    for (const field of optionalFields) {
+    for (const field of allowedFields) {
       if (
+        ratings &&
         ratings[field] !== undefined &&
         ratings[field] !== null &&
         (typeof ratings[field] !== "number" ||
@@ -346,18 +335,8 @@ router.post(
         }
       }
 
-      // --- BEGIN PATCH: Ensure "rating" field is set for Mongoose validation ---
-      // The PropertyReview schema requires a "rating" field.
-      // We'll set it to the main apartment rating.
-      // This ensures Mongoose validation passes and error in @file_context_0 is avoided.
+      // --- PATCH: No "apartment" rating, so do not set "rating" field from it ---
       let reviewFields = { ...reviewData, author: req.user._id };
-      if (
-        reviewData.ratings &&
-        typeof reviewData.ratings.apartment === "number"
-      ) {
-        reviewFields.rating = reviewData.ratings.apartment;
-      }
-      // --- END PATCH ---
 
       const review = new PropertyReview(reviewFields);
 
