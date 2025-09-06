@@ -278,16 +278,45 @@ router.get(
 router.post(
   "/reviews",
   auth,
-  // Validation middleware for ratings (no "оценка квартиры" / apartment rating)
+  // Validation middleware for ratings, including apartment rating logic
   (req, res, next) => {
     const ratings = req.body.ratings;
-    // All ratings are optional, but if present, must be numbers between 1 and 5
+    const isResidentialComplexReview = !!req.body.isResidentialComplexReview; // галочка "отзыв о жилом комплексе"
+    // Allowed fields for ЖК/двор/парковка/инфраструктура
     const allowedFields = [
       "residentialComplex",
       "courtyard",
       "parking",
       "infrastructure",
     ];
+    // Apartment rating is only allowed if NOT a ЖК review
+    if (!isResidentialComplexReview) {
+      if (
+        ratings &&
+        ratings.apartment !== undefined &&
+        ratings.apartment !== null &&
+        (typeof ratings.apartment !== "number" ||
+          ratings.apartment < 1 ||
+          ratings.apartment > 5)
+      ) {
+        return res.status(400).json({
+          message: `Оценка "apartment" должна быть числом от 1 до 5, если указана.`,
+        });
+      }
+    } else {
+      // If ЖК review, apartment rating must NOT be present
+      if (
+        ratings &&
+        ratings.apartment !== undefined &&
+        ratings.apartment !== null
+      ) {
+        return res.status(400).json({
+          message:
+            'Оценка квартиры ("apartment") недоступна при отзыве о жилом комплексе.',
+        });
+      }
+    }
+    // Validate other allowed fields (all optional, but if present must be 1-5)
     for (const field of allowedFields) {
       if (
         ratings &&
@@ -335,8 +364,19 @@ router.post(
         }
       }
 
-      // --- PATCH: No "apartment" rating, so do not set "rating" field from it ---
+      // Set "rating" field only if apartment rating is present and NOT a ЖК review
       let reviewFields = { ...reviewData, author: req.user._id };
+      if (
+        reviewData.ratings &&
+        reviewData.ratings.apartment !== undefined &&
+        reviewData.ratings.apartment !== null &&
+        !reviewData.isResidentialComplexReview
+      ) {
+        reviewFields.rating = reviewData.ratings.apartment;
+      } else {
+        // Remove rating field if not applicable
+        delete reviewFields.rating;
+      }
 
       const review = new PropertyReview(reviewFields);
 
